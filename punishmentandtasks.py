@@ -61,7 +61,7 @@ def view_pending_punishment(root_directory):
     today = datetime.date.today().strftime("%d-%m-%Y")
     
     for dirpath, _, filenames in os.walk(root_directory):
-        if os.path.basename(dirpath) >= today:  # Skip today's directory and future directories
+        if os.path.basename(dirpath) >= today:
             continue
         for filename in filenames:
             if filename.endswith(".txt"):
@@ -75,26 +75,21 @@ def view_pending_punishment(root_directory):
                     files_to_update.append((file_path, tasks))
     
     if punishment > 0:
-        print(f"\n{punishment} pushups!!!!\n")
-        confirm = input("Enter 'done' when you have completed the punishment: ")
-        if confirm.lower() == 'done':
-            for file_path, tasks in files_to_update:
-                save_tasks(file_path, tasks)
-            print("Punishment completed. Tasks updated.")
-        else:
-            print("Punishment not completed.")
+        print(f"\n**********{punishment} pushups!!!************")
+        return punishment
     else:
         print("\nNo pending punishment.\n")
 
-def punsihment():
-    pass
+
 
 
 def main():
     today = datetime.date.today()
     date_string = today.strftime("%d-%m-%Y")
     directory_path = f"C:/Users/aditya/Desktop/PunishmentAndTasks/tasksfolder/{date_string}"
+    root_directory = "C:/Users/aditya/Desktop/PunishmentAndTasks/tasksfolder"
     file_path = f"{directory_path}/{date_string}.txt"
+    punishment = view_pending_punishment(root_directory)
 
     os.makedirs(directory_path, exist_ok=True)
 
@@ -103,7 +98,7 @@ def main():
     while True:
         try:
             choose = int(input("Enter: \n1/ To add tasks \n2/ To view tasks \n3/ To delete a task \n4/ To update the status of a task \n5/ To exit\n6/ View pending punishment\n7/ Begin your punishment\n"))
-            
+             
             if choose == 1:
                 tasks = add_tasks(tasks)
             elif choose == 2:
@@ -115,10 +110,11 @@ def main():
             elif choose == 5:
                 break   
             elif choose == 6:
-                root_directory = "C:/Users/aditya/Desktop/PunishmentAndTasks/tasksfolder"
                 view_pending_punishment(root_directory)
             elif choose == 7:
-                continue
+                pushup_count  = count_pushups(punishment)
+                punishment -= pushup_count
+                print(f"You completed {pushup_count} push-ups. Remaining punishment: {punishment}")
             else:
                 print("Invalid choice. Please try again.")
 
