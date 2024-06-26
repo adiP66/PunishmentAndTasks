@@ -86,10 +86,14 @@ def view_pending_punishment(root_directory):
     else:
         print("\nNo pending punishment.\n")
 
+def punsihment():
+    pass
+
+
 def main():
     today = datetime.date.today()
     date_string = today.strftime("%d-%m-%Y")
-    directory_path = f"C:/Users/aditya/Desktop/Projects/tasksfolder/{date_string}"
+    directory_path = f"C:/Users/aditya/Desktop/PunishmentAndTasks/tasksfolder/{date_string}"
     file_path = f"{directory_path}/{date_string}.txt"
 
     os.makedirs(directory_path, exist_ok=True)
@@ -111,8 +115,10 @@ def main():
             elif choose == 5:
                 break   
             elif choose == 6:
-                root_directory = "C:/Users/aditya/Desktop/Projects/tasksfolder"
+                root_directory = "C:/Users/aditya/Desktop/PunishmentAndTasks/tasksfolder"
                 view_pending_punishment(root_directory)
+            elif choose == 7:
+                continue
             else:
                 print("Invalid choice. Please try again.")
 
