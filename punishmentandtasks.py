@@ -2,13 +2,15 @@ import datetime
 import os
 import psycopg2
 from pushups import count_pushups
+from dotenv import load_dotenv, dotenv_values
 
+load_dotenv()
 # Database configuration
-DB_NAME = "task_manager"
-DB_USER = "postgres"
-DB_PASSWORD = "admin"
-DB_HOST = "localhost"
-DB_PORT = "5432"
+DB_NAME = os.getenv("PGDATABASE")
+DB_USER = os.getenv("PGUSER")
+DB_PASSWORD = os.getenv("PGPASSWORD")  # Replace 'your_password' with your actual password
+DB_HOST = os.getenv("PGHOST")
+DB_PORT = os.getenv("PGPORT")
 
 def connect_to_db():
     conn = psycopg2.connect(
@@ -122,7 +124,7 @@ def delete_prior_day_tasks():
 
 def main():
     today = datetime.date.today()
-    date_string = today.strftime("%d-%m-%Y")
+    date_string = today.strftime("%Y-%m-%d")
     punishment = view_pending_punishment()
 
     tasks = load_tasks(date_string)
