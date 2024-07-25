@@ -2,13 +2,14 @@ import datetime
 import os
 import psycopg2
 from pushups import count_pushups
-from dotenv import load_dotenv, dotenv_values
+from dotenv import load_dotenv
 
 load_dotenv()
+
 # Database configuration
 DB_NAME = os.getenv("PGDATABASE")
 DB_USER = os.getenv("PGUSER")
-DB_PASSWORD = os.getenv("PGPASSWORD")  # Replace 'your_password' with your actual password
+DB_PASSWORD = os.getenv("PGPASSWORD")
 DB_HOST = os.getenv("PGHOST")
 DB_PORT = os.getenv("PGPORT")
 
@@ -42,12 +43,13 @@ def save_tasks(tasks, date):
     conn.close()
 
 def add_tasks(tasks, date):
+    print("\n--- Add Tasks ---")
     while True:
-        user_input = input("Enter the tasks that you are going to perform (or type 'exit()' to finish): ").split()
+        user_input = input("Enter the tasks that you are going to perform (or type 'exit' to finish): ").split()
         if not user_input:
             print("Enter some tasks!")
             continue
-        if user_input[0].lower() == "exit()":
+        if user_input[0].lower() == "exit":
             break
         for task in user_input:
             index = max(tasks.keys(), default=0) + 1
@@ -56,13 +58,15 @@ def add_tasks(tasks, date):
     return tasks
 
 def view_tasks(tasks):
+    print("\n--- View Tasks ---")
     if not tasks:
         print("No tasks available.")
     else:
         for index, (task, status) in tasks.items():
-            print(f"************** {index}) {task}: {status} ***************")
+            print(f"{index}) {task}: {status}")
 
 def delete_task(tasks, date):
+    print("\n--- Delete Task ---")
     try:
         task_to_delete = int(input("Enter the task index to delete: "))
         if task_to_delete in tasks:
@@ -81,6 +85,7 @@ def delete_task(tasks, date):
     return tasks
 
 def update_task_status(tasks, date):
+    print("\n--- Update Task Status ---")
     try:
         task_to_update = int(input("Enter the task index to update: "))
         if task_to_update in tasks:
@@ -100,19 +105,21 @@ def update_task_status(tasks, date):
     return tasks
 
 def view_pending_punishment():
+    print("\n--- View Pending Punishment ---")
     conn = connect_to_db()
     cursor = conn.cursor()
     cursor.execute("SELECT COUNT(*) FROM tasks WHERE status = 'Not Done' AND date < CURRENT_DATE")
     uncompleted_tasks = cursor.fetchone()[0]
-    punishment = uncompleted_tasks * 2
+    punishment = uncompleted_tasks * 50
     cursor.close()
     conn.close()
 
     if punishment > 0:
-        print(f"\n**********{punishment} pushups!!!************")
+        print(f"\n********** {punishment} pushups!!! ************")
         return punishment
     else:
         print("\nNo pending punishment.\n")
+        return 0
 
 def delete_prior_day_tasks():
     conn = connect_to_db()
@@ -130,8 +137,17 @@ def main():
     tasks = load_tasks(date_string)
 
     while True:
+        print("\n--- Main Menu ---")
+        print("1) Add tasks")
+        print("2) View tasks")
+        print("3) Delete a task")
+        print("4) Update the status of a task")
+        print("5) Exit")
+        print("6) View pending punishment")
+        print("7) Begin your punishment")
+
         try:
-            choose = int(input("Enter: \n1/ To add tasks \n2/ To view tasks \n3/ To delete a task \n4/ To update the status of a task \n5/ To exit\n6/ View pending punishment\n7/ Begin your punishment\n"))
+            choose = int(input("\nEnter your choice: "))
 
             if choose == 1:
                 tasks = add_tasks(tasks, date_string)
@@ -142,6 +158,7 @@ def main():
             elif choose == 4:
                 tasks = update_task_status(tasks, date_string)
             elif choose == 5:
+                print("Exiting...")
                 break
             elif choose == 6:
                 view_pending_punishment()
@@ -155,10 +172,10 @@ def main():
             else:
                 print("Invalid choice. Please try again.")
 
-        except ValueError as e:
-            print('\n*********Invalid input! Please enter a number.**************')
+        except ValueError:
+            print('\n********* Invalid input! Please enter a number. **************')
         except Exception as e:
-            print('\n*********An error occurred!**************', e)
+            print('\n********* An error occurred! **************', e)
 
 if __name__ == "__main__":
     main()
