@@ -1,10 +1,10 @@
 import datetime
 import os
 import psycopg2
-from pushups import count_pushups
+from pushups import count_pushups, count_squats
 from dotenv import load_dotenv
 import tkinter as tk
-from tkinter import messagebox, simpledialog
+from tkinter import messagebox, simpledialog, ttk
 
 load_dotenv()
 
@@ -119,12 +119,40 @@ def on_right_click(event):
     except IndexError:
         messagebox.showerror("Error", "No task selected.")
 
+def on_double_click(event):
+    try:
+        selected_index = task_list.curselection()[0]
+        task_id = task_list.get(selected_index).split(')')[0]
+        new_status = simpledialog.askstring("Update Status", "Enter new status:", initialvalue=tasks[int(task_id)][1])
+        if new_status:
+            update_task_status(tasks, date_string, task_id, new_status)
+    except IndexError:
+        messagebox.showerror("Error", "No task selected.")
+
+def perform_punishment():
+    global punishment
+    punishment = view_pending_punishment()
+    if punishment > 0:
+        punishment_type = punishment_var.get()
+        if punishment_type == "Push-ups":
+            pushup_count = count_pushups(punishment)
+        elif punishment_type == "Squats":
+            pushup_count = count_squats(punishment)
+        punishment -= pushup_count
+        messagebox.showinfo("Punishment", f"You completed {pushup_count} {punishment_type.lower()}. Remaining punishment: {punishment}")
+        if punishment <= 0:
+            delete_prior_day_tasks()
+            messagebox.showinfo("Punishment", "Prior day's tasks have been deleted.")
+    else:
+        messagebox.showinfo("Punishment", "No pending punishment.")
+
 def main():
-    global task_list, tasks, date_string
+    global task_list, tasks, date_string, punishment, punishment_var
 
     today = datetime.date.today()
     date_string = today.strftime("%Y-%m-%d")
     tasks = load_tasks(date_string)
+    punishment = view_pending_punishment()
 
     root = tk.Tk()
     root.title("Task Manager")
@@ -141,19 +169,20 @@ def main():
     update_task_list(tasks)
 
     task_list.bind("<Button-3>", on_right_click)
+    task_list.bind("<Double-1>", on_double_click)
 
-  
-    update_entry = tk.Entry(root, width=50)
-    update_entry.pack(pady=10)
+    punishment_label = tk.Label(root, text="Choose Punishment Type:")
+    punishment_label.pack(pady=5)
 
-    status_entry = tk.Entry(root, width=50)
-    status_entry.pack(pady=10)
-
-    update_button = tk.Button(root, text="Update Task Status", command=lambda: update_task_status(tasks, date_string, update_entry.get(), status_entry.get()))
-    update_button.pack(pady=5)
+    punishment_var = tk.StringVar(value="Push-ups")
+    punishment_menu = ttk.Combobox(root, textvariable=punishment_var, values=["Push-ups", "Squats"], state="readonly")
+    punishment_menu.pack(pady=5)
 
     punishment_button = tk.Button(root, text="View Pending Punishment", command=lambda: messagebox.showinfo("Pending Punishment", f"{view_pending_punishment()} pushups"))
     punishment_button.pack(pady=5)
+
+    perform_punishment_button = tk.Button(root, text="Perform Punishment", command=perform_punishment)
+    perform_punishment_button.pack(pady=5)
 
     root.mainloop()
 

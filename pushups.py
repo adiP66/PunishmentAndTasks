@@ -6,6 +6,72 @@ mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 
 
+def count_squats(punishment_count):
+    """
+    Starts a real-time squat counter using OpenCV and MediaPipe.
+
+    Args:
+        punishment_count: The desired number of squats for punishment.
+
+    Returns:
+        The final squat count after the user completes the exercise.
+    """
+
+    count = 0
+    position = "up"  # Initial position should be "up"
+    completed = False  # Flag to track completion
+
+    cap = cv2.VideoCapture(0)
+    with mp_pose.Pose(min_detection_confidence=0.7, min_tracking_confidence=0.7) as pose:
+        while cap.isOpened() and not completed:
+            success, image = cap.read()
+            if not success:
+                print("Empty camera")
+                break
+
+            image = cv2.flip(image, 1)  # Flip horizontally (optional)
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            result = pose.process(image)
+
+            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+
+            if result.pose_landmarks:
+                landmarks = result.pose_landmarks.landmark
+
+                # Get the Y-coordinates of hips and knees
+                left_hip_y = landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y
+                right_hip_y = landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].y
+                left_knee_y = landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value].y
+                right_knee_y = landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].y
+
+                # Check squat position
+                if left_knee_y > left_hip_y + 0.1 and right_knee_y > right_hip_y + 0.1:
+                    position = "down"
+                elif left_knee_y < left_hip_y - 0.1 and right_knee_y < right_hip_y - 0.1 and position == "down":
+                    position = "up"
+                    count += 1
+                    print(f"Squat count: {count}")
+
+            # Display information and handle completion
+            cv2.putText(image, f"Squats: {count}/{punishment_count}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
+            if count >= punishment_count:
+                completed = True
+                print(f"Congratulations! You completed {punishment_count} squats.")
+
+            cv2.imshow("Squat counter", image)
+
+            # Break loop if 'q' is pressed or punishment is completed
+            if cv2.waitKey(1) & 0xFF == ord('q') or completed:
+                break
+
+    cap.release()
+    cv2.destroyAllWindows()
+
+    return count # Return final squat count
+    
+
+
+
 def count_pushups(punishment_count):
     """
     Starts a real-time push-up counter using OpenCV and MediaPipe.
@@ -73,4 +139,4 @@ def count_pushups(punishment_count):
 
 # Example usage
 if __name__ == "__main__":
-    count_pushups(10)  # Change 10 to the desired number of push-ups
+    count_squats(10)  # Change 10 to the desired number of push-ups
